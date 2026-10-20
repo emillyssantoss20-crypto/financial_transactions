@@ -18,7 +18,7 @@ O projeto estrutura uma base confiável e rastreável, mede a qualidade dos dado
 | # | Etapa | O que envolve | Camada | Status |
 |---|---|---|---|---|
 | 1 | Ingestão | Ambiente no Unity Catalog, upload dos arquivos via Python e criação das tabelas brutas | Bronze | ✅ |
-| 2 | Qualidade e tratamento | Perfil dos dados, padronização, proteção de dados sensíveis, regras de qualidade e quarentena | Silver | 🚧 |
+| 2 | Qualidade e tratamento | Perfil dos dados, padronização, proteção de dados sensíveis, regras de qualidade e quarentena | Silver | ✅ |
 | 3 | Modelagem | Modelo estrela, indicadores de risco e tabelas agregadas | Gold | ⬜ |
 | 4 | Visualização | Painéis de risco e de qualidade de dados | Power BI | ⬜ |
 
@@ -204,15 +204,15 @@ Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se
 
 **Conclusão:** as 7 ligações estão íntegras. As tabelas podem ser relacionadas com segurança na camada Gold.
 
-> **Ajuste após a validação:** depois da quarentena, 7.193 rótulos de fraude ficaram sem transação na Silver, porque pertencem às transações de valor zero que foram para a quarentena.
+> **Ajuste após a validação:** depois da quarentena das transações, 7.193 rótulos de fraude ficaram sem transação na Silver. Eles também foram para a quarentena (`quality.quarentena_fraud_labels`), e todas as ligações voltaram a ficar íntegras.
 
 ### Resumo da validação
 
-**Pontos validados:** nenhum id repetido, nenhum registro perdido (as transações retiradas estão na quarentena), todas as colunas com o tipo correto e as ligações entre as tabelas íntegras, com exceção dos rótulos de fraude das transações em quarentena.
+**Pontos validados:** nenhum id repetido, nenhum registro perdido (os retirados estão na quarentena), todas as colunas com o tipo correto e todas as ligações entre as tabelas íntegras.
 
 **Alertas:** clientes com idade, renda ou aposentadoria fora do esperado, cartões com limite zero ou abertos no mês do vencimento e compras de chip com cidade "ONLINE". Esses registros seguem na Silver para análise.
 
-**Quarentena:** transações com valor zero, que ficam separadas das análises de risco.
+**Quarentena:** 10.639 transações com valor zero e seus 7.193 rótulos de fraude, separados das análises de risco em `quality.quarentena_transactions` e `quality.quarentena_fraud_labels`.
 
 ### 2.4 Decisões
 
