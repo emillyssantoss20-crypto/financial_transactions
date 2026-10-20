@@ -196,6 +196,14 @@ Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se
 
 **Conclusão:** as 7 ligações estão íntegras, sem nenhum registro sem correspondência. Todo cartão pertence a um cliente cadastrado, toda transação tem cliente, cartão e categoria válidos, o cartão usado sempre é do próprio cliente e todo rótulo de fraude aponta para uma transação existente. As tabelas podem ser relacionadas com segurança no modelo da camada Gold.
 
+### Resumo da validação
+
+**Pontos validados:** as tabelas da Silver não têm ids repetidos nem perda de linhas, todas as colunas estão com o tipo correto e todas as ligações entre as tabelas estão íntegras.
+
+**Alertas:** clientes com idade, renda ou aposentadoria fora do esperado, cartões com limite zero ou abertos no mês do vencimento e transações sem estado e CEP do comércio. Esses registros seguem na Silver, marcados para análise.
+
+**Quarentena:** transações com valor zero, que ficam separadas das análises de risco.
+
 #### 2.4 Decisões
 
 - **Dados sensíveis ficam só na Bronze.** Número completo do cartão, CVV, endereço e coordenadas não chegam à Silver nem ao Power BI.
