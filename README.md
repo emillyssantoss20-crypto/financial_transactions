@@ -208,7 +208,7 @@ Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se
 
 ### Resumo da validação
 
-**Pontos validados:** as tabelas da Silver não têm ids repetidos nem perda de linhas, todas as colunas estão com o tipo correto e todas as ligações entre as tabelas estão íntegras.
+**Pontos validados:** nenhum id repetido, nenhum registro perdido (as transações retiradas estão na quarentena), todas as colunas com o tipo correto e as ligações entre as tabelas íntegras, com exceção dos rótulos de fraude das transações em quarentena.
 
 **Alertas:** clientes com idade, renda ou aposentadoria fora do esperado, cartões com limite zero ou abertos no mês do vencimento e compras de chip com cidade "ONLINE". Esses registros seguem na Silver para análise.
 
@@ -217,7 +217,7 @@ Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se
 ### 2.4 Decisões
 
 - **Dados sensíveis ficam só na Bronze.** Número completo do cartão, CVV, endereço e coordenadas não chegam à Silver nem ao Power BI.
-- **Valores suspeitos não são apagados.** Idade 101, limite zero e renda zero seguem na Silver e serão marcados por regras de qualidade (alerta). Só as transações de valor zero foram para à quarentena.
+- **Valores suspeitos não são apagados.** Idade 101, limite zero e renda zero seguem na Silver e serão marcados por regras de qualidade (alerta). Só as transações de valor zero foram para a quarentena.
 - **Datas "MM/AAAA":** a abertura da conta vira o primeiro dia do mês e a validade do cartão vira o último dia, porque o cartão vale até o fim do mês.
 
 ---
