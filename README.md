@@ -79,11 +79,11 @@ Notebook:
 
 | Tabela | Origem | Linhas |
 |---|---|---|
-| `bronze.users` | users_data.csv | <!-- PREENCHER --> |
-| `bronze.cards` | cards_data.csv | <!-- PREENCHER --> |
-| `bronze.transactions` | transactions_data.csv | <!-- PREENCHER --> |
-| `bronze.mcc_codes` | mcc_codes.json | <!-- PREENCHER --> |
-| `bronze.fraud_labels` | train_fraud_labels.json | <!-- PREENCHER --> |
+| `bronze.users` | users_data.csv | 2.000 |
+| `bronze.cards` | cards_data.csv | 6.146 |
+| `bronze.transactions` | transactions_data.csv | 13.305.915 |
+| `bronze.mcc_codes` | mcc_codes.json | 109 |
+| `bronze.fraud_labels` | train_fraud_labels.json | 8.914.963 |
 
 **Decisões**
 - **Colunas dos CSVs lidas como texto.** A Bronze guarda o dado exatamente como chegou; conversões e correções ficam na Silver, onde cada uma é documentada.
