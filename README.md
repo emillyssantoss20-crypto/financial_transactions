@@ -142,24 +142,61 @@ Notebook: [`validation silver.ipynb`](validation%20silver.ipynb)
 
 Após o tratamento, as tabelas da Silver foram medidas em seis dimensões de qualidade. Cada verificação gera uma tabela com o **resultado** e a **ação** (prosseguir ou avaliar).
 
-| Dimensão | O que verifica | Resultado na Bronze |
-|---|---|---|
-| Unicidade | Ids repetidos | Nenhum id repetido |
-| Completude | Campos vazios | Vazios em `merchant_state` (1.563.700), `zip` (1.652.706) e `errors` (13.094.522) nas transações |
-| Formato | Valores que não viram número ou data | Todos convertíveis |
-| Valores possíveis | Valores fora de faixas reais | Idade 101 (1), renda per capita zero (15), limite zero (31), transações de valor zero (103.969) |
-| Coerência | Colunas que se contradizem | Renda per capita maior que a anual (34), cartão aberto no mês do vencimento (248), idade acima da aposentadoria (277, alerta) |
-| Integridade | Ligações entre tabelas | Nenhum registro sem correspondência |
+#### 2.3.1. Unicidade
+Verifica se cada tabela tem um id diferente por linha. Se o total de linhas for diferente do total de ids distintos, há ids repetidos.
 
-| Verificação | O que verifica | Resultado ideal |
-|---|---|---|
-| Formato | Se cada coluna ficou com o tipo esperado e se alguma conversão deixou valores vazios (vazios da Silver × Bronze) | 0 colunas com tipo errado e 0 falhas de conversão |
-| Valores possíveis | Se os valores estão dentro de faixas reais e se cidade e estado foram preenchidos | Os mesmos casos encontrados na Bronze, sem casos novos |
-| Coerência | Se colunas relacionadas não se contradizem | Os mesmos casos encontrados na Bronze, sem casos novos |
+**Ideal:** linhas e ids iguais em todas as bases.
 
-Encontrar os mesmos casos da Bronze mostra que o tratamento não perdeu nem criou problemas. Esses casos viram as regras de alerta e quarentena da próxima etapa.
+<img width="1145" height="298" alt="image" src="https://github.com/user-attachments/assets/35d7f17d-4fbb-4d51-bc6d-5bab33ee64b0" />
 
-### 2.4 Decisões
+**Conclusão:** Nenhum id repetido e mesma quantidade de linhas da Bronze nas 5 tabelas (nenhum registro perdido no tratamento)
+
+#### 2.3.2. Completude
+Conta quantos campos estão vazios em cada coluna das tabelas da Silver.
+
+**Ideal:** 0 vazios, com exceção dos já conhecidos da Bronze nas transações (merchant_state, zip e errors).
+
+<img width="1153" height="297" alt="image" src="https://github.com/user-attachments/assets/bd1aa35b-7328-4e98-83f3-6c1d40295df1" />
+
+**Conclusão:** clientes, cartões, códigos MCC e rótulos de fraude estão completos, inclusive a cidade e o estado dos clientes. Nas transações, os únicos vazios estão em `merchant_state` (1.563.700), `zip` (1.652.706) e `errors` (13.094.522), os vazios já vinham da Bronze e têm explicação de negócio. Não é falha no tratamento.
+
+#### 2.3.3. Formato
+Verifica se cada coluna da Silver ficou com o tipo esperado (número, data, verdadeiro/falso) e se alguma conversão falhou, comparando os vazios da Silver com os da Bronze.
+
+**Ideal:** 0 colunas com tipo errado e 0 falhas de conversão em todas as bases.
+
+<img width="1145" height="312" alt="image" src="https://github.com/user-attachments/assets/f7aeee93-b0a1-463b-ad18-a25f2900d4ca" />
+
+**Conclusão:** todas as colunas estão com o tipo esperado e nenhuma conversão deixou valores vazios. Na primeira execução, a validação encontrou `transaction_id` e `is_fraud` como texto na `silver.fraud_labels`; a tabela foi recriada com as conversões corretas e passou na verificação.
+
+#### 2.3.4. Valores possíveis
+Verifica se os valores de cada coluna estão dentro de faixas reais (idade, score, renda, limite, valor da transação) e se as categorias são as conhecidas (gênero, bandeira, tipo de cartão e de transação).
+
+**Ideal:** 0 valores fora das regras em todas as bases.
+
+<img width="1146" height="285" alt="image" src="https://github.com/user-attachments/assets/d564f14f-c967-4023-877f-0d03ea9f127b" />
+
+**Conclusão:** 1 cliente com 101 anos, 15 clientes com renda per capita zero, 31 cartões com limite zero e 10.639 transações com valor zero. Cidade, estado, categorias e rótulos de fraude estão todos dentro do esperado. Os casos de clientes e cartões seguem na Silver com alerta; as transações de valor zero são candidatas à quarentena.
+
+#### 2.3.5. Coerência
+Cruza colunas relacionadas para ver se elas se contradizem: idade e ano de nascimento, renda per capita e renda anual, idade e aposentadoria, abertura e vencimento do cartão, troca do PIN e abertura da conta, e data das transações.
+
+**Ideal:** 0 registros incoerentes.
+
+<img width="1152" height="286" alt="image" src="https://github.com/user-attachments/assets/568d7dd3-b7ed-4208-93b2-72ac593a3d39" />
+
+**Conclusão:** Nos clientes, 34 têm renda per capita maior que a renda anual e 277 têm idade acima da aposentadoria (alerta, provavelmente clientes já aposentados). Nos cartões, 248 foram abertos no mesmo mês do vencimento. A idade é coerente com o ano de nascimento, o PIN foi trocado depois da abertura e todas as transações são anteriores a 2020. Esses casos seguem na Silver com alerta.
+
+#### 2.3.6. Integridade
+Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se a quantidade de cartões do cliente bate com a tabela de cartões, se toda transação tem cliente, cartão e código MCC cadastrados, se o cartão usado pertence ao cliente da transação e se todo rótulo de fraude tem uma transação.
+
+**Ideal:** 0 registros sem correspondência em todas as ligações.
+
+<img width="1147" height="342" alt="image" src="https://github.com/user-attachments/assets/15702578-a68f-4cd2-b472-3b1ab3cc9532" />
+
+**Conclusão:** as 7 ligações estão íntegras, sem nenhum registro sem correspondência. Todo cartão pertence a um cliente cadastrado, toda transação tem cliente, cartão e categoria válidos, o cartão usado sempre é do próprio cliente e todo rótulo de fraude aponta para uma transação existente. As tabelas podem ser relacionadas com segurança no modelo da camada Gold.
+
+#### 2.4 Decisões
 
 - **Dados sensíveis ficam só na Bronze.** Número completo do cartão, CVV, endereço e coordenadas não chegam à Silver nem ao Power BI.
 - **Valores suspeitos não são apagados.** Idade 101, limite zero e renda zero seguem na Silver e serão marcados por regras de qualidade (alerta). Só as transações de valor zero são candidatas à quarentena.
