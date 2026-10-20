@@ -116,7 +116,7 @@ Notebook: [`processing silver.ipynb`](processing%20silver.ipynb)
 | `silver.cards` | Número do cartão **mascarado** (só os 4 últimos dígitos), **CVV removido**, datas "MM/AAAA" convertidas em data, sim/não convertido em verdadeiro/falso |
 | `silver.transactions` | Data e hora convertidas, valor em número, CEP padronizado com 5 dígitos, `use_chip` renomeada para `transaction_type`, canal (`channel`) e país (`merchant_country`) do comércio, `errors` vazio como "Nenhum", alerta de tipo contraditório e transações de valor zero na quarentena |
 | `silver.mcc_codes` | Código convertido em número |
-| `silver.fraud_labels` | Id da transação em número e rótulo "Yes/No" em verdadeiro/falso |
+| `silver.fraud_labels` | Id da transação em número, rótulo "Yes/No" em verdadeiro/falso e rótulos das transações em quarentena separados |
 
 Cada tabela segue o mesmo padrão: **formatação, tratamento** e **conferência**. A conferência é uma validação rápida feita logo após a criação. Ela compara as linhas da Bronze com as da Silver e verifica se alguma conversão deixou valores vazios.
 
@@ -126,7 +126,7 @@ Cada tabela segue o mesmo padrão: **formatação, tratamento** e **conferência
 | `silver.cards` | 6.146 linhas nas duas e 0 vazios em validade, abertura, limite, chip e dark web |
 | `silver.transactions` | 13.305.915 linhas na Bronze, 13.295.276 na Silver e 10.639 na quarentena (Silver + quarentena = Bronze), 0 datas, valores e erros vazios e 1.652.696 CEPs vazios (compras online e no exterior) |
 | `silver.mcc_codes` | 109 linhas nas duas e 0 códigos ou descrições vazias |
-| `silver.fraud_labels` | 8.914.963 linhas nas duas, 0 vazios e 13.332 fraudes |
+| `silver.fraud_labels` | 8.914.963 linhas na Bronze, 8.907.770 na Silver e 7.193 na quarentena (Silver + quarentena = Bronze), 0 vazios e 0 rótulos sem transação |
 
 ### 2.2 Cidade e estado dos clientes
 
@@ -151,7 +151,7 @@ Verifica se cada tabela tem um id diferente por linha. Se o total de linhas for 
 
 **Conclusão:** Nenhum id repetido e mesma quantidade de linhas da Bronze nas 5 tabelas (nenhum registro perdido no tratamento)
 
-> **Ajuste após a validação:** as transações passam a ter 13.295.276 linhas por causa da quarentena (10.639 transações de valor zero). Os ids continuam únicos em todas as bases.
+> **Ajuste após a validação:** com a quarentena, as transações passam a ter 13.295.276 linhas e os rótulos de fraude 8.907.770. Os ids continuam únicos em todas as bases.
 
 #### 2.3.2. Completude
 Conta quantos campos estão vazios em cada coluna das tabelas da Silver.
