@@ -114,7 +114,7 @@ Notebook: [`processing silver.ipynb`](processing%20silver.ipynb)
 |---|---|
 | `silver.users` | Tipos convertidos, "$" removido dos valores, **cidade e estado** adicionados; endereço e coordenadas removidos |
 | `silver.cards` | Número do cartão **mascarado** (só os 4 últimos dígitos), **CVV removido**, datas "MM/AAAA" convertidas em data, sim/não convertido em verdadeiro/falso |
-| `silver.transactions` | Data e hora convertidas, valor em número, CEP padronizado com 5 dígitos, `use_chip` renomeada para `transaction_type` |
+| `silver.transactions` | Data e hora convertidas, valor em número, CEP padronizado com 5 dígitos, `use_chip` renomeada para `transaction_type`, canal (`channel`) e país (`merchant_country`) do comércio, `errors` vazio como "Nenhum", alerta de tipo contraditório e transações de valor zero na quarentena |
 | `silver.mcc_codes` | Código convertido em número |
 | `silver.fraud_labels` | Id da transação em número e rótulo "Yes/No" em verdadeiro/falso |
 
@@ -124,7 +124,7 @@ Cada tabela segue o mesmo padrão: **formatação, tratamento** e **conferência
 |---|---|
 | `silver.users` | 2.000 linhas na Bronze e na Silver, 0 clientes sem cidade e quase todos a até 10 km da cidade encontrada |
 | `silver.cards` | 6.146 linhas nas duas e 0 vazios em validade, abertura, limite, chip e dark web |
-| `silver.transactions` | 13.295.276 linhas nas duas, 0 datas, valores e MCC vazios e 1.652.706 CEPs vazios (o mesmo número da Bronze) |
+| `silver.transactions` | 13.305.915 linhas na Bronze, 13.295.276 na Silver e 10.639 na quarentena (Silver + quarentena = Bronze), 0 datas, valores e erros vazios e 1.652.696 CEPs vazios (compras online e no exterior) |
 | `silver.mcc_codes` | 109 linhas nas duas e 0 códigos ou descrições vazias |
 | `silver.fraud_labels` | 8.914.963 linhas nas duas, 0 vazios e 13.332 fraudes |
 
@@ -210,14 +210,14 @@ Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se
 
 **Pontos validados:** as tabelas da Silver não têm ids repetidos nem perda de linhas, todas as colunas estão com o tipo correto e todas as ligações entre as tabelas estão íntegras.
 
-**Alertas:** clientes com idade, renda ou aposentadoria fora do esperado, cartões com limite zero ou abertos no mês do vencimento e transações sem estado e CEP do comércio. Esses registros seguem na Silver, marcados para análise.
+**Alertas:** clientes com idade, renda ou aposentadoria fora do esperado, cartões com limite zero ou abertos no mês do vencimento e compras de chip com cidade "ONLINE". Esses registros seguem na Silver para análise.
 
 **Quarentena:** transações com valor zero, que ficam separadas das análises de risco.
 
-#### 2.4 Decisões
+### 2.4 Decisões
 
 - **Dados sensíveis ficam só na Bronze.** Número completo do cartão, CVV, endereço e coordenadas não chegam à Silver nem ao Power BI.
-- **Valores suspeitos não são apagados.** Idade 101, limite zero e renda zero seguem na Silver e serão marcados por regras de qualidade (alerta). Só as transações de valor zero são candidatas à quarentena.
+- **Valores suspeitos não são apagados.** Idade 101, limite zero e renda zero seguem na Silver e serão marcados por regras de qualidade (alerta). Só as transações de valor zero foram para à quarentena.
 - **Datas "MM/AAAA":** a abertura da conta vira o primeiro dia do mês e a validade do cartão vira o último dia, porque o cartão vale até o fim do mês.
 
 ---
