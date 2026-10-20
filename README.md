@@ -124,7 +124,7 @@ Cada tabela segue o mesmo padrão: **formatação, tratamento** e **conferência
 |---|---|
 | `silver.users` | 2.000 linhas na Bronze e na Silver, 0 clientes sem cidade e quase todos a até 10 km da cidade encontrada |
 | `silver.cards` | 6.146 linhas nas duas e 0 vazios em validade, abertura, limite, chip e dark web |
-| `silver.transactions` | 13.305.915 linhas nas duas, 0 datas, valores e MCC vazios e 1.652.706 CEPs vazios (o mesmo número da Bronze) |
+| `silver.transactions` | 13.295.276 linhas nas duas, 0 datas, valores e MCC vazios e 1.652.706 CEPs vazios (o mesmo número da Bronze) |
 | `silver.mcc_codes` | 109 linhas nas duas e 0 códigos ou descrições vazias |
 | `silver.fraud_labels` | 8.914.963 linhas nas duas, 0 vazios e 13.332 fraudes |
 
@@ -151,6 +151,8 @@ Verifica se cada tabela tem um id diferente por linha. Se o total de linhas for 
 
 **Conclusão:** Nenhum id repetido e mesma quantidade de linhas da Bronze nas 5 tabelas (nenhum registro perdido no tratamento)
 
+> **Ajuste após a validação:** as transações passam a ter 13.295.276 linhas por causa da quarentena (10.639 transações de valor zero). Os ids continuam únicos em todas as bases.
+
 #### 2.3.2. Completude
 Conta quantos campos estão vazios em cada coluna das tabelas da Silver.
 
@@ -158,7 +160,9 @@ Conta quantos campos estão vazios em cada coluna das tabelas da Silver.
 
 <img width="1153" height="297" alt="image" src="https://github.com/user-attachments/assets/bd1aa35b-7328-4e98-83f3-6c1d40295df1" />
 
-**Conclusão:** clientes, cartões, códigos MCC e rótulos de fraude estão completos, inclusive a cidade e o estado dos clientes. Nas transações, os únicos vazios estão em `merchant_state` (1.563.700), `zip` (1.652.706) e `errors` (13.094.522), os vazios já vinham da Bronze e têm explicação de negócio. Não é falha no tratamento.
+**Conclusão:** só as transações têm vazios, em `merchant_state`, `zip` e `errors`. Os mesmos vazios já existiam na Bronze, então o tratamento não criou nenhum.
+
+> **Ajuste após a validação:** os vazios de estado e CEP são compras online e no exterior, que agora estão identificadas nas colunas `channel` e `merchant_country`. O campo `errors` vazio passou a ser "Nenhum".
 
 #### 2.3.3. Formato
 Verifica se cada coluna da Silver ficou com o tipo esperado (número, data, verdadeiro/falso) e se alguma conversão falhou, comparando os vazios da Silver com os da Bronze.
@@ -167,7 +171,9 @@ Verifica se cada coluna da Silver ficou com o tipo esperado (número, data, verd
 
 <img width="1145" height="312" alt="image" src="https://github.com/user-attachments/assets/f7aeee93-b0a1-463b-ad18-a25f2900d4ca" />
 
-**Conclusão:** todas as colunas estão com o tipo esperado e nenhuma conversão deixou valores vazios. Na primeira execução, a validação encontrou `transaction_id` e `is_fraud` como texto na `silver.fraud_labels`; a tabela foi recriada com as conversões corretas e passou na verificação.
+**Conclusão:** todas as colunas estão com o tipo esperado e nenhuma conversão falhou.
+
+> **Ajuste após a validação:** na primeira execução, `transaction_id` e `is_fraud` estavam como texto na `fraud_labels`. A tabela foi recriada com os tipos corretos. As novas colunas das transações também entraram na verificação.
 
 #### 2.3.4. Valores possíveis
 Verifica se os valores de cada coluna estão dentro de faixas reais (idade, score, renda, limite, valor da transação) e se as categorias são as conhecidas (gênero, bandeira, tipo de cartão e de transação).
@@ -176,7 +182,9 @@ Verifica se os valores de cada coluna estão dentro de faixas reais (idade, scor
 
 <img width="1146" height="285" alt="image" src="https://github.com/user-attachments/assets/d564f14f-c967-4023-877f-0d03ea9f127b" />
 
-**Conclusão:** 1 cliente com 101 anos, 15 clientes com renda per capita zero, 31 cartões com limite zero e 10.639 transações com valor zero. Cidade, estado, categorias e rótulos de fraude estão todos dentro do esperado. Os casos de clientes e cartões seguem na Silver com alerta; as transações de valor zero são candidatas à quarentena.
+**Conclusão:** 1 cliente com 101 anos, 15 clientes com renda per capita zero, 31 cartões com limite zero e 10.639 transações com valor zero. As demais regras estão dentro do esperado.
+
+> **Ajuste após a validação:** as transações de valor zero foram para a quarentena. Uma nova regra encontrou 5.788 compras de chip com cidade "ONLINE", que ficam com alerta.
 
 #### 2.3.5. Coerência
 Cruza colunas relacionadas para ver se elas se contradizem: idade e ano de nascimento, renda per capita e renda anual, idade e aposentadoria, abertura e vencimento do cartão, troca do PIN e abertura da conta, e data das transações.
@@ -185,7 +193,7 @@ Cruza colunas relacionadas para ver se elas se contradizem: idade e ano de nasci
 
 <img width="1152" height="286" alt="image" src="https://github.com/user-attachments/assets/568d7dd3-b7ed-4208-93b2-72ac593a3d39" />
 
-**Conclusão:** Nos clientes, 34 têm renda per capita maior que a renda anual e 277 têm idade acima da aposentadoria (alerta, provavelmente clientes já aposentados). Nos cartões, 248 foram abertos no mesmo mês do vencimento. A idade é coerente com o ano de nascimento, o PIN foi trocado depois da abertura e todas as transações são anteriores a 2020. Esses casos seguem na Silver com alerta.
+**Conclusão:** 34 clientes com renda per capita maior que a anual, 277 clientes com idade acima da aposentadoria (provavelmente já aposentados) e 248 cartões abertos no mês do vencimento. Esses casos seguem na Silver com alerta.
 
 #### 2.3.6. Integridade
 Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se a quantidade de cartões do cliente bate com a tabela de cartões, se toda transação tem cliente, cartão e código MCC cadastrados, se o cartão usado pertence ao cliente da transação e se todo rótulo de fraude tem uma transação.
@@ -194,7 +202,9 @@ Verifica se as tabelas se ligam corretamente: se todo cartão tem um cliente, se
 
 <img width="1147" height="342" alt="image" src="https://github.com/user-attachments/assets/15702578-a68f-4cd2-b472-3b1ab3cc9532" />
 
-**Conclusão:** as 7 ligações estão íntegras, sem nenhum registro sem correspondência. Todo cartão pertence a um cliente cadastrado, toda transação tem cliente, cartão e categoria válidos, o cartão usado sempre é do próprio cliente e todo rótulo de fraude aponta para uma transação existente. As tabelas podem ser relacionadas com segurança no modelo da camada Gold.
+**Conclusão:** as 7 ligações estão íntegras. As tabelas podem ser relacionadas com segurança na camada Gold.
+
+> **Ajuste após a validação:** depois da quarentena, 7.193 rótulos de fraude ficaram sem transação na Silver, porque pertencem às transações de valor zero que foram para a quarentena.
 
 ### Resumo da validação
 
